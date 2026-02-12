@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test: Cuidados Críticos y Patologías</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <style>
+        .option-btn {
+            transition: all 0.2s;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateX(5px);
+        }
+        .correct {
+            background-color: #10b981 !important;
+            color: white !important;
+            border-color: #059669 !important;
+        }
+        .incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col items-center p-4 transition-colors duration-300">
+
+    <!-- Header & Scoreboard -->
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6 transition-colors">
+        <h1 class="text-2xl font-bold text-blue-800 dark:text-blue-400 mb-2 text-center">Test de Cuidados Críticos</h1>
+        <p class="text-center text-gray-500 dark:text-gray-400 text-sm mb-4 italic">Banco de preguntas actualizado</p>
+        <div class="flex justify-between items-center border-t dark:border-gray-700 pt-4">
+            <div class="text-center">
+                <p class="text-gray-500 dark:text-gray-400 text-sm uppercase font-semibold">Pregunta</p>
+                <p id="question-counter" class="text-xl font-bold text-gray-800 dark:text-gray-200">1 / 45</p>
+            </div>
+            <div class="flex gap-8">
+                <div class="text-center">
+                    <p class="text-green-600 dark:text-green-400 text-sm uppercase font-semibold">Aciertos</p>
+                    <p id="hits-count" class="text-xl font-bold dark:text-green-400">0</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-red-600 dark:text-red-400 text-sm uppercase font-semibold">Errores</p>
+                    <p id="misses-count" class="text-xl font-bold dark:text-red-400">0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Container -->
+    <div id="game-container" class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 transition-colors">
+        <div id="question-screen">
+            <h2 id="question-text" class="text-xl font-medium text-gray-800 dark:text-gray-200 mb-6 leading-relaxed">
+                <!-- Carga dinámica -->
+            </h2>
+            <div id="options-list" class="flex flex-col gap-3">
+                <!-- Carga dinámica -->
+            </div>
+            <div class="mt-8 flex justify-end">
+                <button id="next-btn" class="hidden bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition shadow-lg">
+                    Siguiente Pregunta
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden text-center">
+            <h2 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-4">¡Test Finalizado!</h2>
+            <div id="final-stats" class="text-lg mb-6 dark:text-gray-300"></div>
+            <button onclick="location.reload()" class="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-blue-700 shadow-xl transition transform hover:scale-105">
+                Reiniciar Test
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "1. El edema agudo pulmonar no cardiogénico es aquel que:", a: ["Todas son incorrectas", "Está causado por un aumento de la permeabilidad capilar", "Está causado por una disminución de la presión hidrostática", "Ocurre de forma secundaria a una insuficiencia aguda del ventrículo izquierdo"], c: 1 },
+            { q: "2. ¿Cuáles son algunos de los factores de riesgo del edema agudo pulmonar?", a: ["Todas son correctas", "Enfermedad de las arterias coronarias", "Cardiopatía congénitas", "Arritmias"], c: 0 },
+            { q: "3. ¿Qué posición es la ideal para un paciente que presente Edema Agudo de Pulmón?", a: ["Decúbito Supino", "Posición Fowler", "Decúbito Lateral", "Decúbito Prono"], c: 1 },
+            { q: "4. ¿Qué cuidados de enfermería son correctos en respecto al Edema Agudo de Pulmón?", a: ["Administrar oxigenoterapia", "Observar las secreciones que presenta el paciente", "Tener preparado el material para una posible intubación", "Todas son correctas"], c: 3 },
+            { q: "5. En un paciente con EAP, ¿qué equipo de oxigenoterapia debemos colocar?", a: ["Gafas nasales a 6L/min", "Mascarilla Venturi", "Es necesaria la intubación de emergencia", "No se necesita ningún equipo de oxigenoterapia"], c: 1 },
+            { q: "6. ¿Cuál es el fármaco de elección en el tromboembolismo pulmonar?", a: ["Dobutamina", "Dopamina", "Clopidogrel", "Aspirina"], c: 2 },
+            { q: "7. ¿Cuál de los siguientes factores de riesgo está presente en el tromboembolismo pulmonar?", a: ["Comorbilidad", "Cardiopatía isquémica", "Hipertensión arterial", "Todas son correctas"], c: 3 },
+            { q: "8. Entre las actividades para el manejo de la HTA pulmonar en el TEP se encuentran la medición de todas MENOS:", a: ["Presión pulmonar enclavada.", "Saturación de oxígeno", "PaCo2", "Frecuencia respiratoria"], c: 0 },
+            { q: "9. ¿Cuál de los siguientes factores no contribuye a la triada de Virchow?", a: ["Hipercoagulabilidad", "Estasis de la sangre", "Lesión del vaso", "Elevación de la presión venosa central."], c: 3 },
+            { q: "10. ¿De cuál de estos factores no dependen las consecuencias de un TEP?", a: ["Número y tamaño de los émbolos", "Enfermedades previas pulmonares", "Capacidad de disolver coágulos", "Padecer Insuficiencia Cardiaca Izquierda"], c: 3 },
+            { q: "11. ¿Cuál de los siguientes factores NO se consideran de riesgo en la aparición de shock cardiogénico?", a: ["Antecedentes de insuficiencia cardiaca.", "Bloqueo de las principales arterias cardiacas.", "Enfermedad de las arterias coronarias.", "Tensión arterial baja (Consecuencia, no factor de riesgo inicial)."], c: 3 },
+            { q: "12. Junto a la clínica de shock cardiogénico, ¿qué estudio diagnóstico NO es necesario en el diagnóstico de éste?", a: ["Electrocardiograma.", "Rx de tórax.", "Gasometría venosa.", "Historia clínica y exploración física."], c: 2 },
+            { q: "13. ¿Qué estructura cardiaca se afecta principalmente en el shock cardiogénico?", a: ["Aurícula izquierda.", "Ventrículo izquierdo.", "Ventrículo derecho.", "Ventrículos izquierdo y derecho."], c: 1 },
+            { q: "14. ¿Cuál es el factor inicial desencadenante del Shock Cardiogénico?", a: ["Disminución de volumen sistólico y gasto cardíaco.", "Aumento de la tensión arterial.", "Aumento del volumen sistólico.", "Aumento del gasto cardíaco."], c: 0 },
+            { q: "15. ¿Cuáles de los siguientes criterios hemodinámicos corresponden a la clínica del shock cardiogénico?", a: ["Hipotensión arterial sistólica <90 mmHg (>30 min).", "Hipertensión arterial.", "Alto índice cardíaco.", "Bradicardia."], c: 0 },
+            { q: "16. ¿Cuál es un factor de riesgo para la crisis hipertensiva?", a: ["Obesidad.", "Consumo de cafeína.", "Consumo de estupefacientes.", "Vitamina D en exceso."], c: 2 },
+            { q: "17. ¿A partir de qué PA se considera crisis hipertensiva?", a: ["140/80 mmHg.", "160/80 mmHg.", "210/120 mmHg.", "180/120 mmHg."], c: 3 },
+            { q: "18. ¿Cuáles son algunos de los síntomas clínicos de la crisis hipertensiva?", a: ["Fatiga, palidez y cianosis.", "Angina de pecho, cefalea, confusión y disnea.", "Dolor abdominal y anuria.", "Disnea, dolor torácico, fatiga y palidez."], c: 1 },
+            { q: "19. Un IMC ≥ 25 kg/m2 influye en el riesgo de elevación de la PA:", a: ["Aumentado en un 50% la posibilidad de sufrir HTA.", "Disminuyendo en un 50%.", "No influye.", "Disminuyendo en un 25%."], c: 0 },
+            { q: "20. Opciones farmacológicas de elección para el tratamiento de las crisis hipertensivas son:", a: ["Bloqueadores del SRAA, antagonistas de calcio y tiazidas.", "Betabloqueadores, SRAA y antagonistas de calcio", "Antagonistas de calcio, tiazidas, betabloqueadores y SRAA", "Tiazidas, betabloqueadores y SRAA"], c: 1 },
+            { q: "21. ¿A qué tipo de LRA nos referimos cuando el paciente presenta una deposición de cristales?", a: ["LRA Renal por lesión del túbulo intersticial.", "LRA Posrrenal por intrarrenal.", "LRA Prerrenal por depleción del volumen.", "LRA Renal por necrosis tubular aguda"], c: 1 },
+            { q: "22. ¿Qué clínica presentará un paciente con LRA prerrenal por depleción de volumen?", a: ["Disminuye turgencia piel, aumenta sed, mucosas secas, oliguria", "Disminuye turgencia, disminuye sed, poliuria", "Aumenta turgencia, aumenta sed, oliguria", "Aumenta turgencia, disminuye sed, oliguria"], c: 0 },
+            { q: "23. En relación al término: Terapia Reemplazo Renal, indicar la correcta:", a: ["Inició en 1977 por J. Jack.", "Inició en 1987 por Kramer.", "Inició en 1977 por Kramer.", "Iniciada en el año 2022."], c: 2 },
+            { q: "24. La Lesión Renal Aguda consiste en:", a: ["Un deterioro de la función del Páncreas.", "Un deterioro de la función de los riñones", "Un deterioro del funcionamiento intestinal", "Un deterioro de la función conjunta de Páncreas e hígado."], c: 1 },
+            { q: "25. Cuál de los siguientes NO es un factor de riesgo en LRA:", a: ["Hipertensión", "Diabetes", "Edad avanzada", "Todas son correctas"], c: 3 },
+            { q: "26. ¿Qué mecanismos se producen en la CAD?", a: ["Insulina insuficiente o ausente", "Aumento de hormonas contrarreguladoras", "Cetogénesis", "Todas son correctas"], c: 3 },
+            { q: "27. ¿Qué signos y síntomas NO son comunes en la CAD?", a: ["Sed excesiva", "Falta de aire", "Orientación (suele haber confusión)", "Aliento con olor afrutado"], c: 2 },
+            { q: "28. Para prevenir la CAD hay que...", a: ["Controlar la glucemia a lo largo del día", "Controlar la insulina necesaria", "Medir cetona en orina si estás enfermo", "Todas las opciones anteriores son correctas"], c: 3 },
+            { q: "29. ¿Cuál no es una causa de la CAD?", a: ["Embarazo", "No administrar correctamente la insulina", "Llevar una dieta hipocalórica", "Infección"], c: 2 },
+            { q: "30. ¿Cuál no está presente en el tratamiento de la CAD?", a: ["Sueroterapia", "Potasio", "Anticoagulantes", "Insulina"], c: 2 },
+            { q: "31. ¿Qué provoca el taponamiento cardíaco?", a: ["Compresión cardíaca", "Descompresión cardíaca", "Aumenta el gasto cardíaco", "Aumenta la perfusión de órganos"], c: 0 },
+            { q: "32. ¿Qué es la triada de Beck?", a: ["Hipotensión severa", "Elevación de la PVC", "Tonos cardíacos amortiguados", "Todas son correctas"], c: 3 },
+            { q: "33. ¿Qué consecuencias hemodinámicas se dan en el taponamiento cardíaco?", a: ["Pérdida del descenso y de la presión auricular derecha y pulso no paradójico", "Pérdida del aumento y pulso paradójico", "Pérdida del descenso y de la presión auricular derecha y pulso paradójico", "Pérdida del descenso y de la presión auricular izquierda y pulso paradójico"], c: 2 },
+            { q: "34. ¿Cómo puede producirse un taponamiento cardíaco?", a: ["Por un trauma", "Por rotura del corazón o la aorta", "Complicación de procedimiento diagnóstico/terapéutico", "Todas son correctas"], c: 3 },
+            { q: "35. El taponamiento cardíaco da lugar a un shock cardiogénico, caracterizado por:", a: ["Hipertensión, anuria y sudoración fría", "Sudoración fría, hipotensión y oligoanuria", "Bradicardia, hipotensión y sudoración caliente", "Ninguna es correcta"], c: 1 },
+            { q: "36. ¿Cuál de los siguientes es un factor protector del TCE?", a: ["Realizar actividad física (si previene caídas).", "Ser hombre.", "Tener entre 15 y 24 años.", "Tener una escala de Glasgow igual a 3."], c: 0 },
+            { q: "37. ¿Cuál de los siguientes es un factor de riesgo del TCE?", a: ["Ser mujer.", "Ser hombre.", "Tener entre 30 y 40 años.", "Tener escala Glasgow 15."], c: 1 },
+            { q: "38. ¿Cuál de los síntomas no pertenece al cuadro clínico grave del TCE?", a: ["Taquicardia.", "HTA.", "Contracción de las pupilas (miosis).", "Salivación excesiva."], c: 2 },
+            { q: "39. Uno de los síntomas del hematoma subdural es:", a: ["Cefalea creciente.", "Visión borrosa.", "Fuga espontánea de LCR.", "Hipotensión intracraneal."], c: 0 },
+            { q: "40. El objetivo principal de la intervención en el lugar del accidente es:", a: ["Prevenir daño secundario.", "Poner en decúbito prono.", "Mover el cuello para ver lesión cervical", "Sedar como primera opción."], c: 0 },
+            { q: "41. ¿Cuál es la clasificación de las quemaduras según su extensión?", a: ["Grandes, medianas y pequeñas.", "Largas, cortas y minúsculas.", "Circulares, longitudinales y ovaladas.", "Menores, moderadas y severas."], c: 3 },
+            { q: "42. ¿Para qué sirve la regla de Wallace en grandes quemados?", a: ["Para medir porcentaje de líquidos perdido.", "Para medir reposición hídrica adecuada.", "Para medir la superficie corporal quemada (SCQ).", "Para estimar salida de UCI."], c: 2 },
+            { q: "43. Uno de los tratamiento aplicados al paciente Gran Quemado es:", a: ["Evitar antibióticos.", "No tapar al paciente.", "Reposición hídrica con SF.", "Evitar la hipotermia del paciente."], c: 3 },
+            { q: "44. En cuanto a la fórmula de Parkland:", a: ["4ml x kg x SCQ: 50% en primeras 12h y 50% en siguientes 12h.", "5ml x kg x SCQ: 50% en 8h y 50% en 12h.", "4ml x kg x SCQ: 50% en las primeras 8h y 50% en las 16h restantes.", "4ml x kg x SCQ: 50% en 12h y 50% en 8h."], c: 2 },
+            { q: "45. La inmovilidad en el gran quemado provoca:", a: ["Diarrea.", "Trombosis arterial periférica.", "Úlceras por presión.", "Mejora de la musculatura."], c: 2 }
+        ];
+
+        let currentQuestion = 0;
+        let hits = 0;
+        let misses = 0;
+        let answered = false;
+
+        const questionText = document.getElementById('question-text');
+        const optionsList = document.getElementById('options-list');
+        const nextBtn = document.getElementById('next-btn');
+        const hitsCount = document.getElementById('hits-count');
+        const missesCount = document.getElementById('misses-count');
+        const qCounter = document.getElementById('question-counter');
+
+        function loadQuestion() {
+            answered = false;
+            nextBtn.classList.add('hidden');
+            const q = questions[currentQuestion];
+            
+            qCounter.innerText = `${currentQuestion + 1} / ${questions.length}`;
+            questionText.innerText = q.q;
+            optionsList.innerHTML = '';
+
+            q.a.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full text-left p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors";
+                btn.innerText = option;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsList.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(index, btn) {
+            if (answered) return;
+            answered = true;
+            
+            const q = questions[currentQuestion];
+            const allBtns = optionsList.querySelectorAll('button');
+
+            if (index === q.c) {
+                btn.classList.add('correct');
+                hits++;
+                hitsCount.innerText = hits;
+            } else {
+                btn.classList.add('incorrect');
+                allBtns[q.c].classList.add('correct');
+                misses++;
+                missesCount.innerText = misses;
+            }
+
+            allBtns.forEach(b => {
+                b.disabled = true;
+                b.classList.remove('hover:bg-gray-50', 'dark:hover:bg-gray-700');
+            });
+            nextBtn.classList.remove('hidden');
+            
+            if (currentQuestion === questions.length - 1) {
+                nextBtn.innerText = "Ver Resultados Finales";
+            }
+        }
+
+        nextBtn.onclick = () => {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        };
+
+        function showResults() {
+            document.getElementById('question-screen').classList.add('hidden');
+            const screen = document.getElementById('result-screen');
+            screen.classList.remove('hidden');
+            
+            const score = Math.round((hits / questions.length) * 100);
+            document.getElementById('final-stats').innerHTML = `
+                <p class="text-4xl font-bold text-blue-600 dark:text-blue-400 mb-2">${score}%</p>
+                <div class="space-y-1">
+                    <p>Aciertos: <span class="text-green-600 dark:text-green-400 font-bold">${hits}</span></p>
+                    <p>Errores: <span class="text-red-600 dark:text-red-400 font-bold">${misses}</span></p>
+                </div>
+                <p class="mt-6 text-gray-600 dark:text-gray-400 italic">Test de 45 preguntas completado con éxito.</p>
+            `;
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>
